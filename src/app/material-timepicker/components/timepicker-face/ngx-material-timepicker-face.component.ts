@@ -48,8 +48,8 @@ export class NgxMaterialTimepickerFaceComponent implements AfterViewInit, OnChan
     @Output() timeChange = new EventEmitter<ClockFaceTime>();
     @Output() timeSelected = new EventEmitter<number>();
 
-    @ViewChild('clockFace', {static: true}) clockFace: ElementRef;
-    @ViewChild('clockHand', {static: true}) clockHand: ElementRef;
+    @ViewChild('clockFace') clockFace: ElementRef;
+    @ViewChild('clockHand') clockHand: ElementRef;
 
     private isStarted: boolean;
     private touchStartHandler: () => any;
@@ -111,8 +111,10 @@ export class NgxMaterialTimepickerFaceComponent implements AfterViewInit, OnChan
         const isInnerClockChosen = this.format && this.isInnerClockFace(centerX, centerY, e.clientX, e.clientY);
         /* Round angle according to angle step */
         const angleStep = this.unit === TimeUnit.MINUTE ? (6 * (this.minutesGap || 1)) : 30;
-        const roundedAngle = roundAngle(circleAngle, angleStep);
-        const angle = (roundedAngle || 360) + (isInnerClockChosen ? 360 : 0);
+        const roundedAngle = isInnerClockChosen
+            ? roundAngle(circleAngle, angleStep) + 360
+            : roundAngle(circleAngle, angleStep);
+        const angle = roundedAngle === 0 ? 360 : roundedAngle;
 
         const selectedTime = this.faceTime.find(val => val.angle === angle);
 
@@ -131,6 +133,14 @@ export class NgxMaterialTimepickerFaceComponent implements AfterViewInit, OnChan
     onMouseup(e: MouseEvent | TouchEvent) {
         e.preventDefault();
         this.isStarted = false;
+    }
+
+    isHourSelected(hour: number): boolean {
+        return (hour === this.selectedTime.time) && !this.isClockFaceDisabled;
+    }
+
+    isMinuteSelected(minute: number): boolean {
+        return ((this.selectedTime.time === minute) && (minute % (this.minutesGap || 5) === 0)) && !this.isClockFaceDisabled;
     }
 
     ngOnDestroy() {

@@ -4,7 +4,6 @@ import { NgxTimepickerFieldComponent } from './ngx-timepicker-field.component';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TimePeriod } from '../../models/time-period.enum';
 import { ClockFaceTime } from '../../models/clock-face-time.interface';
-import { TIME_LOCALE } from '../../tokens/time-locale.token';
 
 describe('NgxTimepickerFieldComponent', () => {
     let component: NgxTimepickerFieldComponent;
@@ -14,9 +13,6 @@ describe('NgxTimepickerFieldComponent', () => {
     beforeEach(async(() => {
         TestBed.configureTestingModule({
             declarations: [NgxTimepickerFieldComponent],
-            providers: [
-                {provide: TIME_LOCALE, useValue: 'en-US'},
-            ],
             schemas: [NO_ERRORS_SCHEMA]
         })
             .compileComponents();
@@ -36,28 +32,12 @@ describe('NgxTimepickerFieldComponent', () => {
         expect(component).toBeTruthy();
     });
 
-    describe('Format', () => {
+    it('should set format', () => {
+        component.format = 24;
+        expect(component.format).toBe(24);
 
-        it('should set 24-hours format', () => {
-            component.format = 24;
-            expect(component.format).toBe(24);
-        });
-
-        it('should set 12-hours format', () => {
-            component.format = 14;
-            expect(component.format).toBe(12);
-        });
-
-        it('should set defaultTime when change format dynamically', () => {
-            const spy = spyOnProperty(component, 'defaultTime', 'set');
-            component.timepickerTime = '23:00';
-            component.format = 24;
-
-            expect(spy).toHaveBeenCalledTimes(0);
-
-            component.format = 12;
-            expect(spy).toHaveBeenCalledWith('23:00');
-        });
+        component.format = 14;
+        expect(component.format).toBe(12);
     });
 
     it('should change minHour and maxHour when setting format', () => {
@@ -73,7 +53,7 @@ describe('NgxTimepickerFieldComponent', () => {
         const time = '11:15 am';
         component.defaultTime = time;
 
-        expect(component.defaultTime.toLowerCase()).toBe(time);
+        expect(component.defaultTime).toBe(time);
 
         tick();
 
@@ -86,7 +66,7 @@ describe('NgxTimepickerFieldComponent', () => {
         const time = '10:13 pm';
         component.writeValue(time);
 
-        expect(component.defaultTime.toLowerCase()).toBe(time);
+        expect(component.defaultTime).toBe(time);
 
         tick();
 
@@ -124,7 +104,7 @@ describe('NgxTimepickerFieldComponent', () => {
 
         tick();
         expect(component.hour).toBe(hour.time);
-        expect(timer).toBe('1:00 AM');
+        expect(timer).toBe('01:00 am');
     }));
 
     it('should change minute', fakeAsync(() => {
@@ -136,7 +116,7 @@ describe('NgxTimepickerFieldComponent', () => {
 
         tick();
         expect(component.minute).toBe(minute.time);
-        expect(timer).toBe('12:15 AM');
+        expect(timer).toBe('12:15 am');
     }));
 
     it('should change period', fakeAsync(() => {
@@ -144,7 +124,7 @@ describe('NgxTimepickerFieldComponent', () => {
 
         tick();
         component.period$.subscribe(p => expect(p).toEqual(TimePeriod.PM));
-        expect(timer).toBe('12:00 PM');
+        expect(timer).toBe('12:00 pm');
     }));
 
     it('should call touch method', () => {
@@ -154,17 +134,17 @@ describe('NgxTimepickerFieldComponent', () => {
     });
 
     it('should update time when timeSet called', () => {
-        let time: string | null = null;
+        let time = null;
         const timeMock = '2:5 am';
-        const expectedTime = '2:05 am';
         const onChange = (val: string) => time = val;
         component.registerOnChange(onChange);
 
         component.onTimeSet(timeMock);
-
-        expect(component.defaultTime.toLowerCase()).toBe(expectedTime);
-        expect(time.toLowerCase()).toBe(expectedTime);
-        expect(component.hour).toBe(2);
-        expect(component.minute).toBe(5);
+        expect(component.defaultTime).toBe(timeMock);
+        expect(time).toBe(timeMock);
+        // @ts-ignore
+        expect(component.hour).toBe('02');
+        // @ts-ignore
+        expect(component.minute).toBe('05');
     });
 });

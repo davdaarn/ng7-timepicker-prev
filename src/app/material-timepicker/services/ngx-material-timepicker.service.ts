@@ -58,7 +58,7 @@ export class NgxMaterialTimepickerService {
         /* Workaround to double error message*/
         try {
             if (TimeAdapter.isTimeAvailable(time, min, max, 'minutes', minutesGap)) {
-                this.setDefaultTime(time, format);
+                this.setDefaultTime(TimeAdapter.formatTime(time, format), format);
             }
         } catch (e) {
             console.error(e);
@@ -69,13 +69,12 @@ export class NgxMaterialTimepickerService {
         const hour = this.hourSubject.getValue().time;
         const minute = this.minuteSubject.getValue().time;
         const period = format === 12 ? this.periodSubject.getValue() : '';
-        const time = `${hour}:${minute} ${period}`.trim();
 
-        return TimeAdapter.formatTime(time, {format});
+        return TimeAdapter.formatTime(`${hour}:${minute} ${period}`, format);
     }
 
     private setDefaultTime(time: string, format: number) {
-        const defaultTime = TimeAdapter.parseTime(time, {format}).toJSDate();
+        const defaultTime = TimeAdapter.convertTimeToDateTime(time, format).toJSDate();
 
         if (DateTime.fromJSDate(defaultTime).isValid) {
             const period = time.substr(time.length - 2).toUpperCase();

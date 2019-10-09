@@ -1,18 +1,16 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { isDigit } from '../../../utils/timepicker.utils';
 import { TimeFormatterPipe } from '../../../pipes/time-formatter.pipe';
 import { TimeUnit } from '../../../models/time-unit.enum';
-import { TimeParserPipe } from '../../../pipes/time-parser.pipe';
 
 @Component({
     selector: 'ngx-timepicker-time-control',
     templateUrl: './ngx-timepicker-time-control.component.html',
     styleUrls: ['./ngx-timepicker-time-control.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [TimeParserPipe, TimeFormatterPipe]
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 
-export class NgxTimepickerTimeControlComponent implements OnInit, OnChanges {
+export class NgxTimepickerTimeControlComponent implements OnInit {
 
     @Input() time: number;
     @Input() min: number;
@@ -20,29 +18,13 @@ export class NgxTimepickerTimeControlComponent implements OnInit, OnChanges {
     @Input() placeholder: string;
     @Input() timeUnit: TimeUnit;
     @Input() disabled: boolean;
-    @Input() isDefaultTimeSet: boolean;
 
     @Output() timeChanged = new EventEmitter<number>();
 
     isFocused: boolean;
 
-    constructor(private timeParser: TimeParserPipe,
-                private timeFormatter: TimeFormatterPipe) {
-    }
-
     ngOnInit(): void {
-        if (this.isDefaultTimeSet) {
-            this.time = this.timeFormatter.transform(this.time, this.timeUnit);
-        }
-    }
-
-    ngOnChanges(changes: SimpleChanges): void {
-        const timeChanges = changes['time'];
-        const isTimeNotProvided = timeChanges && timeChanges.isFirstChange() && !this.isDefaultTimeSet;
-
-        if (isTimeNotProvided) {
-            this.time = null;
-        }
+        this.time = new TimeFormatterPipe().transform(this.time, this.timeUnit);
     }
 
     onKeydown(event: KeyboardEvent): void {
@@ -109,11 +91,7 @@ export class NgxTimepickerTimeControlComponent implements OnInit, OnChanges {
     }
 
     onBlur(): void {
-        this.time = this.timeFormatter.transform(this.time, this.timeUnit);
+        this.time = new TimeFormatterPipe().transform(this.time, this.timeUnit);
         this.isFocused = false;
-    }
-
-    onModelChange(value: string): void {
-        this.time = +this.timeParser.transform(value, this.timeUnit);
     }
 }

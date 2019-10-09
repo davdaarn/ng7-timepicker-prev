@@ -1,4 +1,4 @@
-import { Component, forwardRef, Inject, Input, OnDestroy, OnInit, TemplateRef } from '@angular/core';
+import { Component, forwardRef, Input, OnDestroy, OnInit, TemplateRef } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { NgxMaterialTimepickerService } from '../../services/ngx-material-timepicker.service';
 import { Observable, Subject } from 'rxjs';
@@ -8,8 +8,8 @@ import { getHours, getMinutes } from '../../utils/timepicker-time.utils';
 import { TimeUnit } from '../../models/time-unit.enum';
 import { NgxMaterialTimepickerTheme } from '../../models/ngx-material-timepicker-theme.interface';
 import { takeUntil } from 'rxjs/operators';
-import { TimeAdapter } from '../../services/time-adapter';
-import { TIME_LOCALE } from '../../tokens/time-locale.token';
+import { TimeFormatterPipe } from '../../pipes/time-formatter.pipe';
+import { DateTime } from 'luxon';
 
 @Component({
     selector: 'ngx-timepicker-field',
@@ -36,28 +36,18 @@ export class NgxTimepickerFieldComponent implements OnInit, OnDestroy, ControlVa
 
     timeUnit = TimeUnit;
     timepickerTime: string;
-    isDefaultTime: boolean;
 
     @Input() disabled: boolean;
     @Input() toggleIcon: TemplateRef<HTMLObjectElement>;
     @Input() buttonAlign: 'right' | 'left' = 'right';
     @Input() clockTheme: NgxMaterialTimepickerTheme;
     @Input() controlOnly: boolean;
-    @Input() cancelBtnTmpl: TemplateRef<Node>;
-    @Input() confirmBtnTmpl: TemplateRef<Node>;
 
     @Input()
     set format(value: number) {
         this._format = value === 24 ? 24 : 12;
         this.minHour = this._format === 12 ? 1 : 0;
         this.maxHour = this._format === 12 ? 12 : 23;
-        this.hoursList = getHours(this._format);
-        const isDynamicallyChanged = value && (this.previousFormat && this.previousFormat !== this._format);
-
-        if (isDynamicallyChanged) {
-            this.defaultTime = this.timepickerTime;
-        }
-        this.previousFormat = this._format;
     }
 
     get format(): number {
@@ -67,11 +57,9 @@ export class NgxTimepickerFieldComponent implements OnInit, OnDestroy, ControlVa
 
     @Input()
     set defaultTime(val: string) {
-        const time = TimeAdapter.formatTime(val, {locale: this.locale, format: this._format});
-        this.timepickerService.setDefaultTimeIfAvailable(time, null, null, this._format);
-        this._defaultTime = time;
-        this.timepickerTime = time;
-        this.isDefaultTime = !!time;
+        this.timepickerService.setDefaultTimeIfAvailable(val, null, null, this._format);
+        this._defaultTime = val;
+        this.timepickerTime = val;
     }
 
     get defaultTime(): string {
@@ -80,7 +68,6 @@ export class NgxTimepickerFieldComponent implements OnInit, OnDestroy, ControlVa
 
     private _defaultTime: string;
     private _format = 12;
-    private previousFormat: number;
 
     private hoursList: ClockFaceTime[];
     private minutesList: ClockFaceTime[];
@@ -90,8 +77,7 @@ export class NgxTimepickerFieldComponent implements OnInit, OnDestroy, ControlVa
     private onChange: (value: string) => void = () => {
     }
 
-    constructor(private timepickerService: NgxMaterialTimepickerService,
-                @Inject(TIME_LOCALE) private locale: string) {
+    constructor(private timepickerService: NgxMaterialTimepickerService) {
     }
 
     ngOnInit() {
@@ -107,8 +93,12 @@ export class NgxTimepickerFieldComponent implements OnInit, OnDestroy, ControlVa
         this.minutesList = getMinutes();
     }
 
-    writeValue(val: string): void {
+    writeValue(val: string | Date): void {
         if (val) {
+            if (val instanceof Date) {
+                const time = DateTime.fromJSDate(val);
+                val = time.toLocaleString(DateTime.TIME_SIMPLE).toString();
+              }
             this.defaultTime = val;
         }
     }
@@ -140,10 +130,9 @@ export class NgxTimepickerFieldComponent implements OnInit, OnDestroy, ControlVa
     }
 
     onTimeSet(time: string): void {
-        const localeTime = TimeAdapter.toLocaleTimeString(time, {format: this.format, locale: this.locale});
-
         this.defaultTime = time;
-        this.onChange(localeTime);
+        this.onChange(time);
+        this.formatTime();
     }
 
     ngOnDestroy(): void {
@@ -154,5 +143,10 @@ export class NgxTimepickerFieldComponent implements OnInit, OnDestroy, ControlVa
         const time = this.timepickerService.getFullTime(this._format);
         this.timepickerTime = time;
         this.onChange(time);
+    }
+
+    private formatTime(): void {
+        this.hour = new TimeFormatterPipe().transform(this.hour, TimeUnit.HOUR);
+        this.minute = new TimeFormatterPipe().transform(this.minute, TimeUnit.MINUTE);
     }
 }

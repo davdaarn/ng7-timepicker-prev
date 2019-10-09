@@ -1,6 +1,5 @@
 import {Injectable} from '@angular/core';
 import {Observable, Subject} from 'rxjs';
-import { shareReplay } from 'rxjs/operators';
 
 @Injectable({
     providedIn: 'root'
@@ -11,11 +10,11 @@ export class NgxMaterialTimepickerEventService {
     private keydownEventSubject: Subject<KeyboardEvent> = new Subject();
 
     get backdropClick(): Observable<MouseEvent> {
-        return this.backdropClickSubject.asObservable().pipe(shareReplay({bufferSize: 1, refCount: true}));
+        return this.backdropClickSubject.asObservable();
     }
 
     get keydownEvent(): Observable<KeyboardEvent> {
-        return this.keydownEventSubject.asObservable().pipe(shareReplay({bufferSize: 1, refCount: true}));
+        return this.keydownEventSubject.asObservable();
     }
 
     dispatchEvent(event: KeyboardEvent | MouseEvent): void {

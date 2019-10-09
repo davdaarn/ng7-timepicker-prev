@@ -36,7 +36,6 @@ export class NgxMaterialTimepickerPeriodComponent {
     @Input() minTime: DateTime;
     @Input() maxTime: DateTime;
     @Input() selectedHour: number | string;
-    @Input() meridiems: string[];
 
     @Output() periodChanged = new EventEmitter<TimePeriod>();
 

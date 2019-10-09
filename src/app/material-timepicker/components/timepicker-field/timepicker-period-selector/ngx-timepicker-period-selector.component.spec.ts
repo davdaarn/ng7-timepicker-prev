@@ -2,8 +2,6 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgxTimepickerPeriodSelectorComponent } from './ngx-timepicker-period-selector.component';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TimePeriod } from '../../../models/time-period.enum';
-import { TIME_LOCALE } from '../../../tokens/time-locale.token';
-import { TimeAdapter } from '../../../services/time-adapter';
 
 describe('NgxTimepickerPeriodSelectorComponent', () => {
     let fixture: ComponentFixture<NgxTimepickerPeriodSelectorComponent>;
@@ -12,9 +10,6 @@ describe('NgxTimepickerPeriodSelectorComponent', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             declarations: [NgxTimepickerPeriodSelectorComponent],
-            providers: [
-                {provide: TIME_LOCALE, useValue: TimeAdapter.DEFAULT_LOCALE}
-            ],
             schemas: [NO_ERRORS_SCHEMA]
         }).compileComponents();
 
@@ -51,25 +46,5 @@ describe('NgxTimepickerPeriodSelectorComponent', () => {
         component.backdropClick();
 
         expect(component.isOpened).toBeFalsy();
-    });
-
-    describe('selectedPeriod', () => {
-
-        it('should set value to localizedPeriod', () => {
-            component.meridiems = [TimePeriod.AM, TimePeriod.PM];
-            expect(component.localizedPeriod).toBeUndefined();
-
-            component.selectedPeriod = TimePeriod.AM;
-            expect(component.localizedPeriod).toBe(TimePeriod.AM);
-        });
-
-        it('should not change localizedPeriod when provided invalid value', () => {
-            component.meridiems = [TimePeriod.AM, TimePeriod.PM];
-            expect(component.localizedPeriod).toBeUndefined();
-
-            component.selectedPeriod = null;
-            component.selectedPeriod = undefined;
-            expect(component.localizedPeriod).toBeUndefined();
-        });
     });
 });

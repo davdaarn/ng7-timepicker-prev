@@ -1,11 +1,7 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgxTimepickerTimeControlComponent } from './ngx-timepicker-time-control.component';
-import { NO_ERRORS_SCHEMA, SimpleChanges } from '@angular/core';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TimeUnit } from '../../../models/time-unit.enum';
-import { TimeParserPipe } from '../../../pipes/time-parser.pipe';
-import { DateTime } from 'luxon';
-import { NgxMaterialTimepickerModule } from '../../../ngx-material-timepicker.module';
-import { TimeFormatterPipe } from '../../../pipes/time-formatter.pipe';
 
 describe('NgxTimepickerTimeControlComponent', () => {
     let fixture: ComponentFixture<NgxTimepickerTimeControlComponent>;
@@ -13,11 +9,7 @@ describe('NgxTimepickerTimeControlComponent', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            imports: [NgxMaterialTimepickerModule.setLocale('ar-AE')],
-            providers: [
-                TimeParserPipe,
-                TimeFormatterPipe
-            ],
+            declarations: [NgxTimepickerTimeControlComponent],
             schemas: [NO_ERRORS_SCHEMA]
         }).compileComponents();
 
@@ -29,20 +21,10 @@ describe('NgxTimepickerTimeControlComponent', () => {
     it('should format time when onInit', () => {
         component.time = 1;
         component.timeUnit = TimeUnit.HOUR;
-        component.isDefaultTimeSet = true;
         component.ngOnInit();
 
         // @ts-ignore
         expect(component.time).toBe('01');
-    });
-
-    it('should not format time when onInit', () => {
-        component.time = 1;
-        component.isDefaultTimeSet = false;
-        component.ngOnInit();
-
-        // @ts-ignore
-        expect(component.time).toBe(1);
     });
 
     it('should increase time', async(() => {
@@ -184,52 +166,6 @@ describe('NgxTimepickerTimeControlComponent', () => {
             component.onInput(input);
             expect(component.time).toBe(4);
             expect(input.value).toBe('ef');
-        });
-    });
-
-    describe('ngOnChanges', () => {
-        const changes: SimpleChanges = {
-            time: {
-                currentValue: 10,
-                firstChange: true,
-                isFirstChange: () => true,
-                previousValue: undefined
-            }
-        };
-
-        it('should set time to null', () => {
-            component.time = 7;
-            component.isDefaultTimeSet = false;
-            component.ngOnChanges(changes);
-
-            expect(component.time).toBeNull();
-        });
-
-        it('should not change time', () => {
-            const isFirstChange = () => false;
-            component.time = 7;
-            component.ngOnChanges({time: {...changes.time, isFirstChange}});
-
-            expect(component.time).toBe(7);
-
-            component.isDefaultTimeSet = true;
-            component.ngOnChanges(changes);
-
-            expect(component.time).toBe(7);
-        });
-    });
-
-    describe('onModelChange', () => {
-
-        it('should parse value and set it to time property', () => {
-            const unparsedTime = DateTime.fromObject({minute: 10, numberingSystem: 'arab'}).toFormat('m');
-            component.time = 5;
-            component.timeUnit = TimeUnit.MINUTE;
-
-            component.onModelChange(unparsedTime);
-
-            expect(component.time).toBe(10);
-
         });
     });
 });

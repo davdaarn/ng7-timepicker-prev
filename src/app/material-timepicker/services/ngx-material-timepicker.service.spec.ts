@@ -57,7 +57,7 @@ describe('NgxMaterialTimepickerService', () => {
     });
 
     it('should return default full time as string (hh:mm a or HH:mm)', () => {
-        expect(timepickerService.getFullTime(12)).toBe('12:00 AM');
+        expect(timepickerService.getFullTime(12)).toBe('12:00 am');
         expect(timepickerService.getFullTime(24)).toBe('12:00');
     });
 
@@ -134,9 +134,8 @@ describe('NgxMaterialTimepickerService', () => {
 
     it('should call console error', () => {
         const minutesGap = 5;
-        const locale = 'en-US';
-        const min = TimeAdapter.parseTime('11:00 pm', {locale});
-        const max = TimeAdapter.parseTime('11:50 pm', {locale});
+        const min = TimeAdapter.convertTimeToDateTime('11:00 pm');
+        const max = TimeAdapter.convertTimeToDateTime('11:50 pm');
         const spy = spyOn(console, 'error');
 
         timepickerService.setDefaultTimeIfAvailable('11:43 pm', min, max, 12, minutesGap);

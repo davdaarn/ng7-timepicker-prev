@@ -1,10 +1,9 @@
-import { Directive, ElementRef, forwardRef, HostListener, Inject, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
+import { Directive, ElementRef, forwardRef, HostListener, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { NgxMaterialTimepickerComponent } from '../ngx-material-timepicker.component';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { TimeAdapter } from '../services/time-adapter';
 import { DateTime } from 'luxon';
-import { TIME_LOCALE } from '../tokens/time-locale.token';
 
 const VALUE_ACCESSOR = {
     provide: NG_VALUE_ACCESSOR,
@@ -27,13 +26,6 @@ export class TimepickerDirective implements ControlValueAccessor, OnDestroy, OnC
     @Input()
     set format(value: number) {
         this._format = value === 24 ? 24 : 12;
-        const isDynamicallyChanged = value && (this.previousFormat && this.previousFormat !== this._format);
-
-        if (isDynamicallyChanged) {
-            this.value = this._value;
-            this._timepicker.updateTime(this._value);
-        }
-        this.previousFormat = this._format;
     }
 
     get format(): number {
@@ -45,7 +37,7 @@ export class TimepickerDirective implements ControlValueAccessor, OnDestroy, OnC
     @Input()
     set min(value: string | DateTime) {
         if (typeof value === 'string') {
-            this._min = TimeAdapter.parseTime(value, {locale: this.locale, format: this.format});
+            this._min = TimeAdapter.convertTimeToDateTime(value, this._format);
             return;
         }
         this._min = value;
@@ -60,7 +52,7 @@ export class TimepickerDirective implements ControlValueAccessor, OnDestroy, OnC
     @Input()
     set max(value: string | DateTime) {
         if (typeof value === 'string') {
-            this._max = TimeAdapter.parseTime(value, {locale: this.locale, format: this.format});
+            this._max = TimeAdapter.convertTimeToDateTime(value, this._format);
             return;
         }
         this._max = value;
@@ -86,7 +78,7 @@ export class TimepickerDirective implements ControlValueAccessor, OnDestroy, OnC
             this.updateInputValue();
             return;
         }
-        const time = TimeAdapter.formatTime(value, {locale: this.locale, format: this.format});
+        const time = TimeAdapter.formatTime(value, this._format);
         const isAvailable = TimeAdapter.isTimeAvailable(
             time,
             <DateTime>this._min,
@@ -105,10 +97,7 @@ export class TimepickerDirective implements ControlValueAccessor, OnDestroy, OnC
     }
 
     get value(): string {
-        if (!this._value) {
-            return '';
-        }
-        return TimeAdapter.toLocaleTimeString(this._value, {format: this.format, locale: this.locale});
+        return this._value;
     }
 
     private _value = '';
@@ -117,7 +106,6 @@ export class TimepickerDirective implements ControlValueAccessor, OnDestroy, OnC
     @Input() disableClick: boolean;
 
     private timepickerSubscriptions: Subscription[] = [];
-    private previousFormat: number;
 
     onTouched = () => {
     }
@@ -125,16 +113,11 @@ export class TimepickerDirective implements ControlValueAccessor, OnDestroy, OnC
     private onChange: (value: any) => void = () => {
     }
 
-    constructor(private elementRef: ElementRef,
-                @Inject(TIME_LOCALE) private locale: string) {
-    }
-
-    get element(): HTMLInputElement {
-        return this.elementRef && this.elementRef.nativeElement;
+    constructor(private elementRef: ElementRef) {
     }
 
     private set defaultTime(time: string) {
-        this._timepicker.defaultTime = TimeAdapter.formatTime(time, {locale: this.locale, format: this.format});
+        this._timepicker.setDefaultTime(time);
     }
 
     onInput(value: string) {
@@ -158,9 +141,7 @@ export class TimepickerDirective implements ControlValueAccessor, OnDestroy, OnC
 
     writeValue(value: string): void {
         this.value = value;
-        if (value) {
-            this.defaultTime = value;
-        }
+        this.defaultTime = value;
     }
 
     registerOnChange(fn: (value: any) => void): void {
@@ -185,7 +166,7 @@ export class TimepickerDirective implements ControlValueAccessor, OnDestroy, OnC
             this._timepicker.registerInput(this);
             this.timepickerSubscriptions.push(this._timepicker.timeSet.subscribe((time: string) => {
                 this.value = time;
-                this.onChange(this.value);
+                this.onChange(this._value);
                 this.onTouched();
             }));
             this.timepickerSubscriptions.push(
